@@ -18,6 +18,8 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+
+
 # خدمة الملفات المرفوعة
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
@@ -37,36 +39,42 @@ def get_recipes():
 # إضافة وصفة
 @app.route("/recipes", methods=["POST"])
 def add_recipe():
-    title = request.form.get("title")
-    description = request.form.get("description")
-    category = request.form.get("category")
-    image = request.files.get("image")
+    try:
+        title = request.form.get("title")
+        description = request.form.get("description")
+        category = request.form.get("category")
+        image = request.files.get("image")
 
-    if not title or not description or not category:
-        return jsonify({"error": "Title, Description and Category are required"}), 400
+        if not title or not description or not category:
+            return jsonify({"error": "Title, Description and Category are required"}), 400
 
-    filename = None
-    if image:
-        filename = f"{int(time.time())}_{secure_filename(image.filename)}"
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        filename = None
+        if image:
+            filename = f"{int(time.time())}_{secure_filename(image.filename)}"
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO recipes (title, description, category, image) VALUES (?, ?, ?, ?)",
-        (title, description, category, filename)
-    )
-    conn.commit()
-    recipe_id = cursor.lastrowid
-    conn.close()
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO recipes (title, description, category, image) VALUES (?, ?, ?, ?)",
+            (title, description, category, filename)
+        )
+        conn.commit()
+        recipe_id = cursor.lastrowid
+        conn.close()
 
-    return jsonify({
-        "id": recipe_id,
-        "title": title,
-        "description": description,
-        "category": category,
-        "image": filename
-    })
+        return jsonify({
+            "id": recipe_id,
+            "title": title,
+            "description": description,
+            "category": category,
+            "image": filename
+        })
+    except Exception as e:
+        print("Error in POST /recipes:", e)  # هيتطبع في الـ terminal
+        return jsonify({"error": str(e)}), 500
+
+
 
 # تعديل وصفة
 @app.route("/recipes/<int:recipe_id>", methods=["PUT"])
