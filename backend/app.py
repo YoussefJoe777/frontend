@@ -8,49 +8,63 @@ CORS(app)
 def get_db():
     conn = sqlite3.connect("recipes.db")
     conn.row_factory = sqlite3.Row
-    print( "Database connection established." )
     return conn
 
-# with get_db() as db:
-#     db.execute("""
-#         CREATE TABLE IF NOT EXISTS recipes (
-#             id INTEGER PRIMARY KEY AUTOINCREMENT,
-#             title TEXT NOT NULL,
-#             description TEXT
-#         )
-#     """)
-
-@app.route("/")
-def index():
-    return "Welcome to the Recipe API!"
 
 @app.route("/recipes", methods=["GET"])
 def get_recipes():
-    db = get_db()
-    recipes = db.execute("SELECT * FROM recipes").fetchall()
-    return jsonify([dict(r) for r in recipes])
-    # return ("hello")
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM recipes")
+    rows = cursor.fetchall()
+    recipes = [dict(row) for row in rows]
+    conn.close()
+    return jsonify(recipes)
 
 @app.route("/recipes", methods=["POST"])
 def add_recipe():
-    data = request.get_json()
+    data = request.json
     title = data.get("title")
     description = data.get("description")
+    category = data.get("category")
 
-    if not title:
-        return jsonify({"error": "Title is required"}), 400
+    if not title or not description:
+        return jsonify({"error": "Title and Description are required"}), 400
 
-    db = get_db()
-    db.execute("INSERT INTO recipes (title, description) VALUES (?, ?)", (title, description))
-    db.commit()
-    return jsonify({"message": "Recipe added successfully!"}), 201
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO recipes (title, description, category) VALUES (?, ?, ?)",
+                   (title, description, category))
+    conn.commit()
+    recipe_id = cursor.lastrowid
+    conn.close()
+
+    return jsonify({"id": recipe_id, "title": title, "description": description, "category": category})
+
+@app.route("/recipes/<int:recipe_id>", methods=["PUT"])
+def update_recipe(recipe_id):
+    data = request.json
+    title = data.get("title")
+    description = data.get("description")
+    category = data.get("category")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE recipes SET title=?, description=?, category=? WHERE id=?",
+                   (title, description, category, recipe_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"id": recipe_id, "title": title, "description": description, "category": category})
 
 @app.route("/recipes/<int:recipe_id>", methods=["DELETE"])
 def delete_recipe(recipe_id):
-    db = get_db()
-    db.execute("DELETE FROM recipes WHERE id = ?", (recipe_id,))
-    db.commit()
-    return jsonify({"message": "Recipe deleted"}), 200
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM recipes WHERE id=?", (recipe_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "id": recipe_id})
 
 if __name__ == "__main__":
     app.run(debug=True)
