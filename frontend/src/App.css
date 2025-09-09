@@ -50,10 +50,86 @@
   font-size: 25px;
   cursor: pointer;
 }
-body.dark-mode .modal-content {
-  background: #2c2c2c;
-  color: #f0f0f0;
+/* App.css */
+
+/* Dark Mode Base */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
 }
+
+/* Navbar */
+body.dark-mode .navbar {
+  background-color: #1f1f1f !important;
+}
+
+body.dark-mode .navbar .btn-outline-primary,
+body.dark-mode .navbar .btn-outline-success,
+body.dark-mode .navbar .btn-outline-warning,
+body.dark-mode .navbar .btn-outline-secondary,
+body.dark-mode .navbar .btn-outline-info {
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+body.dark-mode .navbar .btn-outline-primary:hover,
+body.dark-mode .navbar .btn-outline-success:hover,
+body.dark-mode .navbar .btn-outline-warning:hover,
+body.dark-mode .navbar .btn-outline-secondary:hover,
+body.dark-mode .navbar .btn-outline-info:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Cards */
+body.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #333;
+}
+
+/* Modal */
+body.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-radius: 10px;
+}
+
+/* Badges */
+body.dark-mode .badge {
+  opacity: 0.85;
+}
+
+/* Buttons inside cards */
+body.dark-mode .card .btn-warning { background-color: #e6a23c; border-color: #b8860b; }
+body.dark-mode .card .btn-danger { background-color: #f56c6c; border-color: #b22222; }
+body.dark-mode .card .btn-success { background-color: #67c23a; border-color: #3e8e41; }
+body.dark-mode .card .btn-secondary { background-color: #909399; border-color: #606266; }
+body.dark-mode .card .btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Pagination buttons */
+body.dark-mode .btn-outline-primary {
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+  background-color: #333;
+  color: #fff;
+}
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body.dark-mode {
+  background-color: #121212; /* ✅ خلفية موحدة */
+  color: #ffffff;
+}
+
 
 
 /* Light backgrounds for categories */
@@ -64,35 +140,6 @@ body.dark-mode .modal-content {
 .bg-light-info { background-color: rgba(13, 202, 240, 0.15) !important; }
 .bg-light-secondary { background-color: rgba(108, 117, 125, 0.15) !important; }
 
-/* Dark Mode */
-body.dark-mode {
-  background-color: #121212;
-  color: #f0f0f0;
-}
-body.dark-mode .card {
-  background-color: #1e1e1e !important;
-  color: #f0f0f0;
-}
-body.dark-mode .form-control {
-  background-color: #2a2a2a;
-  color: #f0f0f0;
-  border-color: #444;
-}
-body.dark-mode .btn-primary {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-body.dark-mode .btn-dark {
-  background-color: #333;
-  border-color: #333;
-  color: #f0f0f0;
-}
-body.dark-mode input::placeholder {
-  color: #0d6efd;
-}
-body.dark-mode textarea::placeholder {
-  color: #0d6efd;
-}
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
