@@ -7,7 +7,6 @@
   pointer-events: none;
 }
 
-/* Hover effect */
 .card-hover {
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -16,7 +15,6 @@
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -28,7 +26,7 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px); /* خلفية ضبابية */
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
@@ -50,15 +48,12 @@
   font-size: 25px;
   cursor: pointer;
 }
-/* App.css */
 
-/* Dark Mode Base */
 body.dark-mode {
   background-color: #121212;
   color: #e0e0e0;
 }
 
-/* Navbar */
 body.dark-mode .navbar {
   background-color: #1f1f1f !important;
 }
@@ -81,26 +76,22 @@ body.dark-mode .navbar .btn-outline-info:hover {
   color: #fff;
 }
 
-/* Cards */
 body.dark-mode .card {
   background-color: #1e1e1e;
   color: #e0e0e0;
   border: 1px solid #333;
 }
 
-/* Modal */
 body.dark-mode .modal-content {
   background-color: #1e1e1e;
   color: #e0e0e0;
   border-radius: 10px;
 }
 
-/* Badges */
 body.dark-mode .badge {
   opacity: 0.85;
 }
 
-/* Buttons inside cards */
 body.dark-mode .card .btn-warning { background-color: #e6a23c; border-color: #b8860b; }
 body.dark-mode .card .btn-danger { background-color: #f56c6c; border-color: #b22222; }
 body.dark-mode .card .btn-success { background-color: #67c23a; border-color: #3e8e41; }
@@ -109,7 +100,6 @@ body.dark-mode .card .btn:hover {
   filter: brightness(1.1);
 }
 
-/* Pagination buttons */
 body.dark-mode .btn-outline-primary {
   color: #e0e0e0;
   border-color: #555;
@@ -126,13 +116,12 @@ html, body, #root {
 }
 
 body.dark-mode {
-  background-color: #121212; /* ✅ خلفية موحدة */
+  background-color: #121212;
   color: #ffffff;
 }
 
 
 
-/* Light backgrounds for categories */
 .bg-light-warning { background-color: rgba(255, 193, 7, 0.15) !important; }
 .bg-light-success { background-color: rgba(25, 135, 84, 0.15) !important; }
 .bg-light-primary { background-color: rgba(13, 110, 253, 0.15) !important; }

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -8,24 +10,27 @@ function Login({ onLogin }) {
 
   const handleLogin = async () => {
     if (!username || !password) {
-      return alert("Username and password required");
+      return toast.error("Username and password required");
     }
 
     try {
       const res = await fetch("http://127.0.0.1:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }) // ✅ دخول بالاسم والباسورد
+        body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
-      if (data.error) return alert(data.error);
+      if (data.error) return toast.error(data.error);
 
-      alert("Login successful!");
-      onLogin(data);
+      localStorage.setItem("user", JSON.stringify({ username: data.username }));
+      localStorage.setItem("token", data.token);
+
+      toast.success("Login successful!");
+      onLogin({ username: data.username, token: data.token });
       navigate("/myrecipes");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

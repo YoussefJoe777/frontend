@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sqlite3
@@ -12,7 +11,7 @@ from datetime import datetime
 
 created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# ---------- Configuration ----------
+# Configuration
 DB_NAME = "recipes.db"
 UPLOAD_FOLDER = "uploads"
 SECRET_KEY = os.environ.get("RECIPE_SECRET_KEY", "change_this_to_a_strong_secret_in_prod")
@@ -26,7 +25,7 @@ app.config["SECRET_KEY"] = SECRET_KEY
 
 CORS(app, origins=[CORS_ORIGINS])
 
-# ---------- Database helpers ----------
+# Database helpers
 def get_db():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
@@ -35,42 +34,17 @@ def get_db():
 def init_db():
     conn = get_db()
     cur = conn.cursor()
-    # users table
-    # cur.execute("""
-    #     CREATE TABLE IF NOT EXISTS users (
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #         username TEXT UNIQUE NOT NULL,
-    #         email TEXT UNIQUE NOT NULL,
-    #         password_hash TEXT NOT NULL
-    #     )
-    # """)
-    # recipes table
-    # cur.execute("""
-    #     CREATE TABLE IF NOT EXISTS recipes (
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #         user_id INTEGER,
-    #         title TEXT NOT NULL,
-    #         description TEXT NOT NULL,
-    #         category TEXT NOT NULL,
-    #         ingredients TEXT,
-    #         image TEXT,
-    #         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    #         FOREIGN KEY (user_id) REFERENCES users(id)
-    #     )
-    # """)
     conn.commit()
     conn.close()
 
 init_db()
 
-# ---------- Auth helpers ----------
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 def create_token(user_id: int) -> str:
     payload = {"user_id": user_id, "iat": int(time.time())}
     token = jwt.encode(payload, app.config["SECRET_KEY"], algorithm="HS256")
-    # pyjwt v2 returns str, older versions may return bytes
     return token if isinstance(token, str) else token.decode("utf-8")
 
 def decode_token(token: str):
@@ -97,7 +71,6 @@ def token_required(f):
         return f(user_id, *args, **kwargs)
     return decorated
 
-# ---------- Routes: auth ----------
 @app.route("/register", methods=["POST"])
 def register():
     """
@@ -114,7 +87,6 @@ def register():
         conn = get_db()
         cur = conn.cursor()
 
-        # check uniqueness
         cur.execute("SELECT id FROM users WHERE username=?", (username,))
         if cur.fetchone():
             conn.close()
@@ -184,24 +156,42 @@ def get_me(user_id):
     return jsonify(dict(user))
 
 
-# ---------- Routes: recipes ----------
 @app.route("/recipes", methods=["GET"])
 def get_recipes():
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT recipes.*, users.username 
-            FROM recipes 
-            JOIN users ON recipes.user_id = users.id
-            ORDER BY recipes.created_at DESC
-        """)
-        rows = cur.fetchall()
-        recipes = [dict(r) for r in rows]
-        conn.close()
-        return jsonify(recipes)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    search = request.args.get("search", "").lower()
+    sort = request.args.get("sort", "newest")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    query = """
+        SELECT recipes.*, users.username
+        FROM recipes
+        JOIN users ON recipes.user_id = users.id
+        WHERE LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(ingredients) LIKE ?
+    """
+    cursor.execute(query, (f"%{search}%", f"%{search}%", f"%{search}%"))
+    recipes = cursor.fetchall()
+    conn.close()
+
+    recipes = [dict(r) for r in recipes]
+
+    def parse_date(d):
+        try:
+            return datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            return datetime.min
+
+    if sort == "oldest":
+        recipes.sort(key=lambda x: parse_date(x.get("created_at")))
+    elif sort == "likes":
+        recipes.sort(key=lambda x: x.get("likes", 0), reverse=True)
+    elif sort == "comments":
+        recipes.sort(key=lambda x: x.get("comments_count", 0), reverse=True)
+    else:
+        recipes.sort(key=lambda x: parse_date(x.get("created_at")), reverse=True)
+
+    return jsonify(recipes)
+
 
 @app.route("/myrecipes", methods=["GET"])
 @token_required
@@ -222,6 +212,8 @@ def my_recipes(user_id):
         return jsonify(recipes)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+from datetime import datetime
 
 @app.route("/recipes", methods=["POST"])
 @token_required
@@ -245,11 +237,17 @@ def add_recipe(user_id):
             filename = f"{int(time.time())}_{secure_filename(image.filename)}"
             image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         conn = get_db()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO recipes (user_id, title, description, category, ingredients, image) VALUES (?,?,?,?,?,?)",
-            (user_id, title, description, category, ingredients, filename)
+            """
+            INSERT INTO recipes
+            (user_id, title, description, category, ingredients, image, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, title, description, category, ingredients, filename, created_at)
         )
         conn.commit()
         recipe_id = cur.lastrowid
@@ -262,11 +260,12 @@ def add_recipe(user_id):
             "description": description,
             "category": category,
             "ingredients": ingredients,
-            "image": filename
+            "image": filename,
+            "created_at": created_at
         }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 @app.route("/recipes/<int:recipe_id>", methods=["PUT"])
 @token_required
 def update_recipe(user_id, recipe_id):
@@ -354,6 +353,57 @@ def delete_recipe(user_id, recipe_id):
         return jsonify({"success": True, "id": recipe_id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/recipes/<int:id>/like", methods=["POST"])
+@token_required
+def like_recipe(user_id, id):
+    """
+    Toggle like for a recipe.
+    Returns updated likes count and whether current user liked it.
+    """
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        # check if user already liked
+        cur.execute(
+            "SELECT id FROM recipe_likes WHERE user_id=? AND recipe_id=?",
+            (user_id, id)
+        )
+        liked_before = cur.fetchone() is not None
+
+        if liked_before:
+            # remove like
+            cur.execute(
+                "DELETE FROM recipe_likes WHERE user_id=? AND recipe_id=?",
+                (user_id, id)
+            )
+            cur.execute("UPDATE recipes SET likes = likes - 1 WHERE id=?", (id,))
+            liked_now = False
+        else:
+            # add like
+            cur.execute(
+                "INSERT INTO recipe_likes (user_id, recipe_id) VALUES (?, ?)",
+                (user_id, id)
+            )
+            cur.execute("UPDATE recipes SET likes = likes + 1 WHERE id=?", (id,))
+            liked_now = True
+
+        # get updated likes count
+        cur.execute("SELECT likes FROM recipes WHERE id=?", (id,))
+        new_likes = cur.fetchone()["likes"]
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "likes": new_likes,
+            "likedByUser": liked_now
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 # ---------- Static files ----------
 @app.route("/uploads/<path:filename>")

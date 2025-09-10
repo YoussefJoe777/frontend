@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Register({ onRegister }) {
   const [username, setUsername] = useState("");
@@ -8,24 +9,24 @@ function Register({ onRegister }) {
 
   const handleRegister = async () => {
     if (!username || !password) {
-      return alert("Username and password required");
+      return toast.error("Username and password required");
     }
 
     try {
       const res = await fetch("http://127.0.0.1:5000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }) // ✅ من غير إيميل
+        body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
-      if (data.error) return alert(data.error);
+      if (data.error) return toast.error(data.error);
 
-      alert("Register successful!");
-      onRegister(data); // يخزن بيانات المستخدم
+      toast("Register successful!");
+      onRegister(data);
       navigate("/myrecipes");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

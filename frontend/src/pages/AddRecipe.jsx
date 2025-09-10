@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function AddRecipe({ darkMode, user }) {
   const [title, setTitle] = useState("");
@@ -7,14 +9,13 @@ function AddRecipe({ darkMode, user }) {
   const [ingredients, setIngredients] = useState("");
   const [image, setImage] = useState(null);
 
-  // ✅ اللستة الجاهزة
   const categories = ["Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Other"];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !description.trim() || !category.trim()) {
-      alert("All fields are required!");
+    if (!title.trim() || !description.trim() || !category.trim() || !ingredients.trim()) {
+      toast.error("⚠️ All fields are required!");
       return;
     }
 
@@ -30,13 +31,13 @@ function AddRecipe({ darkMode, user }) {
     const res = await fetch("http://127.0.0.1:5000/recipes", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${user.token}`, // 🔑 التوكن مهم
+        Authorization: `Bearer ${user.token}`,
       },
       body: formData,
     });
 
     if (res.ok) {
-      alert("Recipe added successfully!");
+      toast("Recipe added successfully!");
       setTitle("");
       setDescription("");
       setCategory("");
@@ -44,7 +45,7 @@ function AddRecipe({ darkMode, user }) {
       setImage(null);
     } else {
       const errData = await res.json();
-      alert("Failed to add recipe: " + (errData.error || res.statusText));
+      toast.error("Failed to add recipe: " + (errData.error || res.statusText));
     }
   };
 

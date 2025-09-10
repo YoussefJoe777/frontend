@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./../App.css";
+import "react-toastify/dist/ReactToastify.css";
 
 function MyRecipes({ darkMode, user }) {
   const [recipes, setRecipes] = useState([]);
@@ -29,6 +34,7 @@ function MyRecipes({ darkMode, user }) {
     Other: "bg-light-secondary",
   };
 
+  // Fetch recipes on load
   useEffect(() => {
     if (!user) return;
     fetch("http://127.0.0.1:5000/myrecipes", {
@@ -38,6 +44,7 @@ function MyRecipes({ darkMode, user }) {
       .then((data) => setRecipes(data));
   }, [user]);
 
+  // Start editing
   const handleEdit = (r) => {
     setEditingId(r.id);
     setEditTitle(r.title);
@@ -46,6 +53,7 @@ function MyRecipes({ darkMode, user }) {
     setEditIngredients(r.ingredients || "");
   };
 
+  // Update recipe
   const handleUpdate = async () => {
     const formData = new FormData();
     formData.append("title", editTitle);
@@ -54,40 +62,92 @@ function MyRecipes({ darkMode, user }) {
     formData.append("ingredients", editIngredients);
     if (image) formData.append("image", image);
 
-    const res = await fetch(`http://127.0.0.1:5000/recipes/${editingId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${user.token}` },
-      body: formData,
-    });
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/recipes/${editingId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${user.token}` },
+        body: formData,
+      });
 
-    if (res.ok) {
-      const updated = await res.json();
-      setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-      setEditingId(null);
-      setImage(null);
-    } else {
-      alert("Failed to update recipe");
+      if (res.ok) {
+        const updated = await res.json();
+        setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+        setEditingId(null);
+        setImage(null);
+        toast.success("Recipe updated successfully!");
+      } else {
+        const errData = await res.json();
+        toast.error("Failed to update recipe: " + (errData.error || res.statusText));
+      }
+    } catch (error) {
+      toast.error("Error updating recipe: " + error.message);
     }
   };
 
-  // 🗑️ هنا بنضيف حذف
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this recipe?")) return;
+  // Actual deletion
+  const handleDeleteConfirmed = async (id) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/recipes/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
 
-    const res = await fetch(`http://127.0.0.1:5000/recipes/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${user.token}` },
-    });
-
-    if (res.ok) {
-      setRecipes((prev) => prev.filter((r) => r.id !== id));
-    } else {
-      alert("Failed to delete recipe");
+      if (res.ok) {
+        setRecipes((prev) => prev.filter((r) => r.id !== id));
+        toast.success("Recipe deleted successfully!");
+      } else {
+        const errData = await res.json();
+        toast.error("Failed to delete recipe: " + (errData.error || res.statusText));
+      }
+    } catch (error) {
+      toast.error("Error deleting recipe: " + error.message);
     }
+  };
+
+  // Toast delete confirmation
+  const confirmDelete = (id) => {
+    toast(
+      ({ closeToast }) => (
+        <div>
+          <p>Are you sure you want to delete this recipe?</p>
+          <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
+            <button
+              onClick={async () => {
+                await handleDeleteConfirmed(id);
+                closeToast();
+              }}
+              style={{
+                background: "red",
+                color: "white",
+                border: "none",
+                padding: "5px 10px",
+                cursor: "pointer",
+              }}
+            >
+              Yes
+            </button>
+            <button
+              onClick={closeToast}
+              style={{
+                background: "gray",
+                color: "white",
+                border: "none",
+                padding: "5px 10px",
+                cursor: "pointer",
+              }}
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      { autoClose: false }
+    );
   };
 
   return (
     <div>
+      <h2 className="mb-4 text-center">👋 Hi, <strong>{user.username}</strong></h2>
       <h2 className="mb-4">My Recipes</h2>
       <div className="row">
         {recipes.map((r) => (
@@ -159,13 +219,17 @@ function MyRecipes({ darkMode, user }) {
                         ))}
                       </ul>
                     )}
+                    <p>
+                      <strong>By:</strong> {r.username} <br />
+                      <strong>likescount</strong> {r.likes || 0}
+                    </p>
                     <div className="d-flex gap-2">
                       <button className="btn btn-warning btn-sm" onClick={() => handleEdit(r)}>
                         Edit
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(r.id)}
+                        onClick={() => confirmDelete(r.id)}
                       >
                         Delete
                       </button>
