@@ -94,4 +94,19 @@ Some of the main challenges I faced during development were:
    python -m venv venv
    venv\Scripts\activate   # on Windows
    pip install -r requirements.txt
-   python 
+   python app.py
+Runs on http://127.0.0.1:5000
+
+2. **Frontend**:
+```bash
+  cd frontend
+  npm install
+  npm start
+```
+Runs on http://localhost:3000
+
+# database info
+user: youssef password: password
+user: mariam password: qwert123
+user: ahmed password: 12345678
+user: youssef12 password: 123456789
