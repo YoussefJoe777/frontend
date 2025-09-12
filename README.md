@@ -1,70 +1,97 @@
-# Getting Started with Create React App
+# Recipe Manager
+#### Video Demo: https://youtu.be/lwhI-YC2hI4
+#### Description:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
+Recipe Manager is my final project for **CS50’s Introduction to Computer Science**.
+It is a full-stack web application that allows users to create, share, and interact with cooking recipes.
+The idea of the project is to make a small social platform where people can add their recipes, view others’ recipes, and engage with features such as likes.
 
-## Available Scripts
+The project consists of a **backend built with Flask (Python)** and a **frontend built with React**. The backend handles user authentication, recipe storage, and database queries, while the frontend provides a responsive user interface for interacting with the data.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
+- **User Registration and Login**
+  Users can create an account using a username and password. Authentication is handled via JWT tokens.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Add Recipes**
+  Logged-in users can add new recipes with a title, description, ingredients, and a category.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Browse Recipes**
+  All users can browse published recipes. Each recipe displays its title, description, ingredients, and the username of the publisher.
 
-### `npm test`
+- **Like/Unlike Recipes**
+  Any user can like a recipe or remove their like. This is implemented as a toggle, so pressing the like button again will remove the like.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **My recipe Page**
+  Each user has a profile page where their personal recipes are displayed. This allows users to track what they have published.
 
-### `npm run build`
+- **Dark Mode**
+  The application supports light and dark mode, and users can switch between them easily.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Search and Sort**
+  Recipes can be searched by ingredients and sorted by either newest or most liked.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Responsive Design**
+  The project is mobile-friendly thanks to Bootstrap.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Files and Structure
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Backend (Flask)
+- **app.py**: The main application file. Defines all routes (login, register, add recipe, get recipes, like/unlike, profile). It connects to the SQLite database and handles authentication.
+- **models and database**: The database (`recipes.db`) includes three main tables:
+  - `users` (id, username, password_hash)
+  - `recipes` (id, user_id, title, description, ingredients, category, created_at)
+  - `likes` (id, user_id, recipe_id)
+- **requirements.txt**: Lists Python dependencies such as Flask, Flask-CORS, and PyJWT.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Frontend (React)
+- **src/App.js**: Main file that sets up routing between pages (Home, Login, Register, MyRecipes, AddRecipe, Profile).
+- **src/pages/**: Contains React components for each page:
+  - `HomePage.jsx`: Displays all recipes, search, sort, and like/unlike buttons.
+  - `Login.jsx`: Handles user login with toast notifications for errors/success.
+  - `Register.jsx`: Handles user registration.
+  - `MyRecipes.jsx`: Displays recipes created by the logged-in user.
+  - `AddRecipe.jsx`: Allows users to add a new recipe.
+- **src/App.css**: Custom styling, including dark mode adjustments.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Other Files
+- **README.md**: Documentation for the project (this file).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Design Choices
+Another choice was to store likes in a separate table (`likes`) instead of embedding like counts in the recipe table. This allowed a clean toggle system for users liking/unliking recipes, and it avoids duplicate likes by enforcing unique constraints.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+I also debated whether to allow email-based login, but for simplicity I decided to use **username + password** only. This reduced complexity and was enough to demonstrate the authentication system.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+For styling, I used **Bootstrap** to ensure the application looks good on both desktop and mobile devices without writing too much custom CSS. The addition of dark mode improved the user experience.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Challenges
+Some of the main challenges I faced during development were:
+1. **Database Foreign Keys**: At first, deleting users caused foreign key constraint errors because of related recipes and likes. I had to redesign the database to handle cascading deletes properly.
+2. **Like Toggle**: Ensuring that the like button both adds and removes likes without duplication required extra logic in the backend.
+3. **State Management in React**: Handling logged-in state across different components and pages required passing down props and using localStorage for persistence.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Future Improvements
+- Allowing comments on recipes.
+- Allowing saving recipes.
+- Deploying the project online so anyone can use it.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## How to Run
+1. **Backend**:
+   ```bash
+   cd backend
+   python -m venv venv
+   venv\Scripts\activate   # on Windows
+   pip install -r requirements.txt
+   python 
