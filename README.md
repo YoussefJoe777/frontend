@@ -106,7 +106,9 @@ Runs on http://127.0.0.1:5000
 Runs on http://localhost:3000
 
 # database info
+```db
 user: youssef password: password
 user: mariam password: qwert123
 user: ahmed password: 12345678
 user: youssef12 password: 123456789
+```
